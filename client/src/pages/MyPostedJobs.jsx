@@ -6,27 +6,44 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const MyPostedJobs = () => {
-  const {user} = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [jobs, setJobs] = useState([]);
   useEffect(() => {
     fetchAllJobs()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
   const fetchAllJobs = async () => {
     const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/jobs/${user?.email}`)
     setJobs(data)
   }
-  
+
   // delete functionality
-  const handleDelete = async (id)=>{
-    try{
-       await axios.delete(`${import.meta.env.VITE_API_URL}/job/${id}`)
-      
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/job/${id}`)
+
       toast.success('Data Added Successfully!!')
       fetchAllJobs()
-    }catch (err){
+    } catch (err) {
       toast.error(err.message)
     }
+  }
+
+  const modernDelete = (id) => {
+    toast((t) => (
+      <div className='flex gap-3 items-center'>
+        <div>
+          <p>Are You <b>Sure?</b></p>
+        </div>
+        <div className='flex gap-2'>
+          <button onClick={() => {
+            handleDelete(id)
+            toast.dismiss(t.id)}} className='btn btn-sm bg-red-500'>Yes</button>
+          <button onClick={() => toast.dismiss(t.id)} className='btn btn-sm bg-green-500'>Cancel</button>
+        </div>
+        
+      </div>
+    ))
   }
   return (
     <section className='container px-4 mx-auto pt-12'>
@@ -95,20 +112,20 @@ const MyPostedJobs = () => {
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
                         {job.title}
                       </td>
-  
+
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
                         {format(new Date(job.deadline), "dd-MM-yyyy")}
                       </td>
-  
+
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      ${job.min_price} - ${job.max_price}
+                        ${job.min_price} - ${job.max_price}
                       </td>
                       <td className='px-4 py-4 text-sm whitespace-nowrap'>
                         <div className='flex items-center gap-x-2'>
                           <p
-                            className={`px-3 py-1 ${job.category === 'Web Development'&&'text-blue-500 bg-blue-100/60'}
-                            ${job.category === 'Graphics Design'&&'text-green-500 bg-blue-100/60'}
-                            ${job.category === 'Digital Marketing'&&'text-red-500 bg-blue-100/60'}
+                            className={`px-3 py-1 ${job.category === 'Web Development' && 'text-blue-500 bg-blue-100/60'}
+                            ${job.category === 'Graphics Design' && 'text-green-500 bg-blue-100/60'}
+                            ${job.category === 'Digital Marketing' && 'text-red-500 bg-blue-100/60'}
                             text-xs  rounded-full`}
                           >
                             {job.category}
@@ -116,11 +133,11 @@ const MyPostedJobs = () => {
                         </div>
                       </td>
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      {job.description.substring(0,20)}....
+                        {job.description.substring(0, 20)}....
                       </td>
                       <td className='px-4 py-4 text-sm whitespace-nowrap'>
                         <div className='flex items-center gap-x-6'>
-                          <button onClick={()=>handleDelete(job._id)} className='text-gray-500 transition-colors duration-200   hover:text-red-500 focus:outline-none'>
+                          <button onClick={() => modernDelete(job._id)} className='text-gray-500 transition-colors duration-200   hover:text-red-500 focus:outline-none'>
                             <svg
                               xmlns='http://www.w3.org/2000/svg'
                               fill='none'
@@ -136,7 +153,7 @@ const MyPostedJobs = () => {
                               />
                             </svg>
                           </button>
-  
+
                           <Link
                             to={`/update/${job._id}`}
                             className='text-gray-500 transition-colors duration-200   hover:text-yellow-500 focus:outline-none'
