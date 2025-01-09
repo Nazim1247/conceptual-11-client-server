@@ -170,7 +170,6 @@ async function run() {
       const query = { buyer: email };
 
       // console.log('from token', decodedEmail)
-      // console.log('from params', email)
 
       if (decodedEmail !== email)
         return res.status(401).send({ message: 'unauthorized access' })
