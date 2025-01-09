@@ -34,7 +34,7 @@ const AddJob = () => {
       description,
       bid_count: 0,
     };
-    try{// make a post request 
+    try{ 
       await axios.post(
         `${import.meta.env.VITE_API_URL}/add-job`,formData)
         e.target.reset()

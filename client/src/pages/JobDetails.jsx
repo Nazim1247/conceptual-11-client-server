@@ -1,25 +1,86 @@
 import axios from 'axios';
-import { format } from 'date-fns';
-import { useEffect, useState } from 'react'
+import { compareAsc, format } from 'date-fns';
+import { useContext, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { AuthContext } from '../providers/AuthProvider';
+import { toast } from 'react-hot-toast'
+
 
 const JobDetails = () => {
-  const {id} = useParams();
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [job, setJob] = useState([]);
-  const [startDate, setStartDate] = useState(new Date())
+  const [startDate, setStartDate] = useState(new Date());
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchJobData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
   const fetchJobData = async () => {
     const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/job/${id}`)
     setJob(data)
-    setStartDate(new Date(data.deadline))
+    // setStartDate(new Date(data.deadline))
   }
-  const { buyer, title, category, min_price, max_price, deadline, description, } = job || {};
+  const {
+    buyer,
+    title,
+    category,
+    min_price,
+    max_price,
+    deadline,
+    description,
+    _id } = job || {};
+
+  const handleForm = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const price = form.price.value;
+    const email = user?.email;
+    const comment = form.comment.value;
+    const jobId = _id;
+    // const deadline = startDate;
+
+    // email validation
+    if (user?.email === buyer?.email) return toast.error('action not permitted')
+
+    // deadline validation
+    if (compareAsc(new Date(), new Date(deadline)) === 1)
+      return toast.error('deadline crossed');
+
+    // deadline validation
+    if (compareAsc(new Date(startDate), new Date(deadline)) === 1)
+      return toast.error('deadline crossed');
+
+    // price validation
+    if (price > max_price)
+      return toast.error('max price crossed')
+
+    const bidData = {
+      price,
+      email,
+      comment,
+      deadline: startDate,
+      jobId,
+      title,
+      category,
+      status: 'pending',
+      buyer: buyer?.email
+    }
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/add-bid`, bidData)
+      form.reset()
+      toast.success('bid Successful!!')
+      console.log(data)
+      navigate('/my-bids')
+    }
+    catch (err) {
+      toast.error(err?.response?.data)
+    }
+  }
 
   return (
     <div className='flex flex-col md:flex-row justify-around gap-5  items-center min-h-[calc(100vh-306px)] md:max-w-screen-xl mx-auto '>
@@ -28,7 +89,7 @@ const JobDetails = () => {
         <div className='flex items-center justify-between'>
           {
             deadline && (<span className='text-sm font-light text-gray-800 '>
-              Deadline: {format(new Date(deadline), "dd-MM-yyyy")}
+              Deadline: {format(new Date(deadline), "P")}
             </span>)
           }
           <span className='px-4 py-1 text-xs text-blue-800 uppercase bg-blue-200 rounded-full '>
@@ -58,6 +119,7 @@ const JobDetails = () => {
             </div>
             <div className='rounded-full object-cover overflow-hidden w-14 h-14'>
               <img
+                referrerPolicy='no-referrer'
                 src={buyer?.photo}
                 alt=''
               />
@@ -74,7 +136,7 @@ const JobDetails = () => {
           Place A Bid
         </h2>
 
-        <form>
+        <form onSubmit={handleForm}>
           <div className='grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2'>
             <div>
               <label className='text-gray-700 ' htmlFor='price'>
@@ -97,6 +159,7 @@ const JobDetails = () => {
                 id='emailAddress'
                 type='email'
                 name='email'
+                defaultValue={user?.email}
                 disabled
                 className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md   focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40  focus:outline-none focus:ring'
               />

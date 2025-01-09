@@ -114,7 +114,7 @@ const MyPostedJobs = () => {
                       </td>
 
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                        {format(new Date(job.deadline), "dd-MM-yyyy")}
+                        {format(new Date(job.deadline), "P")}
                       </td>
 
                       <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
